@@ -1,0 +1,23 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BE_URL}}/api/v1/pqrs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "description": "Se requiere nueva administración en el conjunto 2",
+    "type": "SUGGESTION"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

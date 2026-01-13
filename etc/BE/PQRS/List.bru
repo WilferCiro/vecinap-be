@@ -1,0 +1,22 @@
+meta {
+  name: List
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BE_URL}}/api/v1/pqrs?startDate=2026-01-12T20:31:25.083Z&endDate=2026-01-12T21:31:25.083Z&type=REQUEST
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: 2026-01-12T20:31:25.083Z
+  endDate: 2026-01-12T21:31:25.083Z
+  type: REQUEST
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,16 @@
+meta {
+  name: list
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BE_URL}}/api/v1/user
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

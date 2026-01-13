@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  firstName        String?
+  lastName         String?
+  password         String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime?         @updatedAt
+  lastLogin        DateTime?
+  userResidentials UserResidential[]
+  pqrs             Pqrs[]
+  pqrsResponses    PqrsResponse[]
+
+  @@index([email])
+}
+
+model Residential {
+  id               String            @id @default(uuid())
+  name             String
+  address          String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime?         @updatedAt
+  userResidentials UserResidential[]
+  notices          Notice[]
+  commonAreas      CommonArea[]
+  visitors         Visitor[]
+  pqrs             Pqrs[]
+
+  @@index([name])
+}
+
+enum UserResidentialRole {
+  ADMIN
+  RESIDENT
+}
+
+model UserResidential {
+  id          String               @id @default(uuid())
+  userId      String
+  residenceId String
+  role        UserResidentialRole?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime?            @updatedAt
+
+  user      User        @relation(fields: [userId], references: [id])
+  residence Residential @relation(fields: [residenceId], references: [id])
+
+  @@unique([userId, residenceId])
+  @@index([residenceId])
+}
+
+enum PqrsType {
+  REQUEST
+  COMPLAINT
+  CLAIM
+  SUGGESTION
+}
+
+enum PqrsStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+model Pqrs {
+  id          Int        @id @default(autoincrement())
+  type        PqrsType   @default(REQUEST)
+  subject     String  
+  description String
+  status      PqrsStatus @default(OPEN)
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime?  @updatedAt
+  residenceId String
+
+  user          User           @relation(fields: [userId], references: [id])
+  residence     Residential    @relation(fields: [residenceId], references: [id])
+  pqrsResponses PqrsResponse[]
+
+  @@index([userId, status])
+}
+
+model PqrsResponse {
+  id          String    @id @default(uuid())
+  pqrsId      Int
+  responderId String
+  message     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  pqrs      Pqrs @relation(fields: [pqrsId], references: [id])
+  responder User @relation(fields: [responderId], references: [id])
+
+  @@index([pqrsId, createdAt])
+}
+
+model NoticeTemplate {
+  id      String   @id @default(uuid())
+  image   String
+  notices Notice[]
+}
+
+model Notice {
+  id          String    @id @default(uuid())
+  title       String
+  content     String
+  residenceId String
+  templateId  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  residence Residential    @relation(fields: [residenceId], references: [id])
+  template  NoticeTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([residenceId, createdAt])
+}
+
+model CommonArea {
+  id          String    @id @default(uuid())
+  name        String
+  residenceId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  residence Residential @relation(fields: [residenceId], references: [id])
+
+  @@index([residenceId, name])
+}
+
+model Visitor {
+  id           String    @id @default(uuid())
+  name         String
+  document     String
+  visitDate    DateTime
+  residenceId  String
+  licensePlate String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+
+  residence Residential @relation(fields: [residenceId], references: [id])
+
+  @@index([document, visitDate])
+}
