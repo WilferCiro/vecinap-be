@@ -11,12 +11,16 @@ import { PqrsStatus, UserResidentialRole } from '@prisma/client';
 import { PqrsListFiltersDto } from '../models/dtos/request/pqrs-list.dto';
 import { PqrsListResponseDto } from '../models/dtos/response/pqrs-list-response.dto';
 import { TablePaginatorResponseDto } from 'src/common/models/dtos/response/table-paginator.-response.dto';
+import { PqrsAddResponseDto } from '../models/dtos/request/pqrs-add-response.dto';
 
 @Injectable()
 export class PqrsService {
   constructor(private readonly orm: ORM) {}
 
-  async create(body: PqrsCreateRequestDto, user: JwtPayload) {
+  async create(
+    body: PqrsCreateRequestDto,
+    user: JwtPayload,
+  ): Promise<{ success: true }> {
     try {
       await this.orm.pqrs.create({
         data: {
@@ -28,6 +32,7 @@ export class PqrsService {
           subject: body.subject,
         },
       });
+      return { success: true };
     } catch (e) {
       throw new AppError(
         PqrsErrorCodesDefinitions[PqrsErrorCodes.CREATION_FAILED],
@@ -65,6 +70,28 @@ export class PqrsService {
         status: true,
         type: true,
         subject: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        pqrsResponses: {
+          take: 1,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          select: {
+            createdAt: true,
+            message: true,
+            responder: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -74,5 +101,45 @@ export class PqrsService {
         count,
       },
     };
+  }
+
+  async addResponse(
+    pqrsId: number,
+    input: PqrsAddResponseDto,
+    user: JwtPayload,
+  ): Promise<{ ok: true }> {
+    await this.orm.pqrsResponse.create({
+      data: {
+        message: input.message,
+        pqrsId: pqrsId,
+        responderId: user.sub,
+      },
+    });
+    await this.orm.pqrs.update({
+      where: {
+        id: pqrsId,
+      },
+      data: {
+        status: PqrsStatus.CLOSED,
+      },
+    });
+    return { ok: true };
+  }
+
+  async remove(pqrsId: number, user: JwtPayload): Promise<{ success: true }> {
+    try {
+      await this.orm.pqrs.delete({
+        where: {
+          id: pqrsId,
+          userId: user.sub,
+        },
+      });
+      return { success: true };
+    } catch (e) {
+      throw new AppError(
+        PqrsErrorCodesDefinitions[PqrsErrorCodes.DELETE_FAILED],
+        e.message,
+      );
+    }
   }
 }

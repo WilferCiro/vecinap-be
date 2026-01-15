@@ -39,4 +39,8 @@ export class ORM {
   get pqrs() {
     return this.service.pqrs;
   }
+
+  get pqrsResponse() {
+    return this.service.pqrsResponse;
+  }
 }

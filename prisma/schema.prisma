@@ -102,8 +102,8 @@ model PqrsResponse {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime? @updatedAt
 
-  pqrs      Pqrs @relation(fields: [pqrsId], references: [id])
-  responder User @relation(fields: [responderId], references: [id])
+  pqrs      Pqrs @relation(fields: [pqrsId], references: [id], onDelete: Cascade)
+  responder User @relation(fields: [responderId], references: [id], onDelete: Cascade)
 
   @@index([pqrsId, createdAt])
 }
